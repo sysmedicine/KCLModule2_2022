@@ -1,0 +1,580 @@
+---
+title: "Choices of a programmer"
+author: "Simon Lam, Xiya Song"
+date: "30 October 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+#rm(list = ls())
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+options(max.print = 20)
+
+```
+
+## Introduction
+
+As an R programmer, you will have a number of choices to make during your analysis. There are many roads to Rome, and it is your individual choice as to how you wish to develop your developer skills. There are choices regarding which packages you want to install, which file formats you want to deal with, and how you deal with warnings and errors. All of this boils down to how you implement solutions to biological problems.
+
+In today's course, we will explore data published in a recent paper. The exact nature of the study and data does not matter in order to understand today's course, but for those who are interested, the source study is linked here: https://doi.org/10.3390/biomedicines9101310.
+
+The files for today's course can be downloaded from: https://github.com/SimonLammmm/KCL-microbiome-2021-22.
+
+# My R crashed; what should I do?
+
+### If R crashes during the course, run the following code and you'll be ready to pick up from where you left off:
+
+```{r}
+
+options(max.print = 20)
+library(readxl)
+library(writexl)
+library(dplyr)
+my_plaintext <- read.csv("terms.csv")
+my_excel <- read_excel("terms.xlsx")
+load("terms.RData")
+
+```
+
+If R hasn't crashed, then there's no need to run the above code.
+
+## Reading and writing data to/from file
+
+Before starting, install `readxl` and `writexl` using `install.packages(c("readxl", "writexl", "dplyr", "ggplot2", "ggpubr"))`.
+
+***NOTE:***
+If you want to run only one line of the code, select the line and press CTRL+ENTER
+
+To read plaintext files, use `read.csv()`.
+
+***NOTE:***
+The default delimiter of the read.csv() function is a comma, but you can use other delimiters by supplying the ‘sep’ argument to the function (e.g., typing sep = ';' allows a semi-colon separated file to be correctly imported - see ?read.csv() for more information on this and other options for working with different file types).
+
+To read Excel files, use `read_excel()` from the `readxl` package.
+
+To read RData files, use `load()`.
+
+TIP: Press Tab while your cursor is between the brackets of any function to see its usage.
+
+```{r}
+
+install.packages(c("readxl", "writexl", "dplyr", "ggplot2", "ggpubr")) # install the required packages for today
+
+options(max.print = 20) # don't let R spam the console
+
+library(readxl) # load the readxl package
+
+my_plaintext <- read.csv("terms.csv") # read the plaintext file
+
+my_excel <- read_excel("terms.xlsx") # read the excel file
+
+my_excel$`Odds Ratio` <- as.numeric(my_excel$`Odds Ratio`) # convert the Odds Ratio column to numeric
+
+my_excel$`Combined Score` <- as.numeric(my_excel$`Combined Score`) # convert the Combined Score column to numeric
+
+load("terms.RData") # read the RData file
+
+```
+
+### Exercise 1
+
+To write plaintext files, use `write.csv()`.
+
+To write Excel files, use `write_xlsx()` from the `writexl` package.
+
+To write RData files, use `save()`.
+
+Complete the code below to save the `my_plaintext`, `my_excel`, and `my_rdata` objects to the files my_plaintext.csv, my_excel.xlsx, and my_rdata.RData, respectively.
+
+```{r}
+
+library(___) # load the writexl package
+
+write.csv(x = my_plaintext, file = "___.csv") # save my_plaintext to the file "my_plaintext.csv"
+
+write_xlsx(x = ___, path = "___.xlsx") # save my_excel to the file "my_excel.xlsx"
+
+save(my_rdata, ___ = "___.RData") # save my_rdata to the file "my_rdata.RData"
+
+```
+
+Which file would you give to 1) an R statistician, 2) a Python statistician, 3) a non-statistician?
+
+## Data types in R
+
+When we load in our data, it's important to make sure that our data are stored as the correct data type.
+
+Use `glimpse()` from the `dplyr` package to check the data types of each of the columns in `my_plaintext`, `my_excel`, and `my_rdata`. Do the data types make sense?
+
+```{r}
+
+library(dplyr) # load the dplyr package
+
+glimpse(my_plaintext) # check the data types in my_plaintext
+
+glimpse(my_excel) # check the data types in my_excel
+
+glimpse(my_rdata) # check the data types in my_rdata
+
+```
+
+### Exercise 2
+
+In `my_excel`, say the Odds Ratio and Combined Score columns were numbers stored as characters. Complete the code to convert these columns into numeric data types using `as.numeric()`.
+
+```{r}
+
+my_excel$`Odds Ratio` <- as.numeric(my_excel$`Odds Ratio`) # convert the Odds Ratio column to numeric
+
+my_excel$`Combined Score` <- ___(___$___) # convert the Combined Score column to numeric
+
+glimpse(___) # check the data types in my_excel again
+
+```
+
+## Subsetting with base R
+
+Use the `$` operator to subset by column name.
+
+Use the `[i,j]` operator to subset by (i,j) index.
+
+Specify ranges using `:`.
+
+You can combine `$` and `[i]` operators.
+
+```{r}
+
+my_plaintext$Term # gives us the Term column
+
+my_plaintext[3,2] # gives us the element in the 3rd row and 2nd column
+
+my_plaintext[3, ] # gives us the entire 3rd row
+
+my_plaintext[ ,2] # gives us the entire 2nd column
+
+my_plaintext[1:3,1:3] # what does this do?
+
+my_plaintext$Term[2] # what does this do?
+
+```
+
+It is possible to specify `i` and `j` using rules rather than numbers.
+
+Use `which()` to specify the indices of interest using numeric rules.
+
+Use `grep()` to specify the indices of interest by matching text.
+
+***NOTE:***
+grep is available for different kinds of pattern searching.
+Using the syntax: 
+grep(pattern, x, ignore.case = FALSE, perl = FALSE, value = FALSE,fixed = FALSE, useBytes = FALSE, invert = FALSE)
+
+```{r}
+
+idx <- which(my_plaintext$Adjusted.P.value < 1e-9) # stores the indices of the terms with adjusted p-value less than 10^-9 in a variable called idx
+
+my_plaintext[idx, ] # returns entire rows for which adjusted p-value is less than 10^-9
+
+idx2 <- grep("neuron", my_plaintext$Term) # stores the indices of the terms containing "neuron" in a variable called idx2
+
+my_plaintext[idx2, ] # returns entire rows in which the terms contain "neuron"
+
+```
+
+### Exercise 3
+
+Use base R functions to extract the rows in `my_excel` which have Odds Ratio greater than 200.
+
+```{r}
+
+idx3 <- which(my_excel$___ > ___) # find the indices which have Odds Ratio greater than 200
+
+my_excel[___,___] # return entire rows for those indices
+
+```
+
+Use base R functions to extract the rows in `my_excel` in which Term contains the text "membrane".
+
+```{r}
+
+idx4 <- grep("___", my_excel$___) # find the indices for which Term includes the text "membrane"
+
+___[___,___] # return entire rows for those indices
+
+```
+
+## Subsetting with `dplyr`
+
+Use the pipe operator `%>%` to use the output of the left-hand side as the input for the right-hand side.
+
+Use the `select()` verb to subset entire columns by name or number.
+
+***NOTE:***
+select:
+The : operator selects a range of consecutive variables
+The ! operator negates a selection
+
+Use the `filter()` verb to subset rows according to numeric or character rules.
+
+
+
+
+```{r}
+
+my_plaintext %>% glimpse()
+
+my_plaintext %>% select(Term, 3, `Odds.Ratio`)
+#my_plaintext %>% select(c(Term, Overlap, P.value))
+#my_plaintext %>% select(!c(Term, Overlap, P.value))
+
+my_plaintext %>% filter(`Combined.Score` > 1000)
+
+```
+
+### Exercise 4
+
+Use `dplyr` functions to extract the rows in `my_excel` which have Odds Ratio greater than 200
+
+```{r}
+
+my_excel %>% filter(___ > ___)
+
+```
+
+Use `dplyr` functions to extract the rows in `my_excel` in which Term contains the text "membrane". (Advanced)
+
+***NOTE:***
+grepl with grep: 
+The grepl() stands for “grep logical”.
+**grep()** return vector of indices of the element if a pattern exists in that vector.
+**grepl()** return TRUE if the given pattern is present in the vector. Otherwise, it return FALSE.
+
+```{r}
+
+my_excel %>% filter(grepl("membrane", Term))
+
+```
+
+Reason with yourself why needed to call `grepl()` within `filter()`.
+
+### Free practice
+
+Write code to extract all Terms in `my_excel` containing the text "neuron" for which P-value is less than 10^-4. It's your choice whether you use base R functions or `dplyr` functions!
+
+```{r}
+
+my_excel
+
+
+
+
+
+
+
+```
+
+## Operators and control structures
+
+We use binary operators in our code to manipulate objects in R. They are binary operators because they take an input on the left-hand side (LHS) and an input on the right-hand side (RHS).
+
+Standard math operators: `+`, `-`, `*`, `/`, `^`.
+
+Modulo operator: `%%`. Modulo means the remainder after a division.
+
+Element matching operator: `%in%`. This asks what elements on the LHS are also on the RHS.
+
+Comparison operator: `==`. This asks whether the LHS is exactly the same as RHS.
+
+Question: what is the difference between `%in%` and `==`? What is the difference in the output?
+
+```{r}
+
+c("A", "B", "C") %in% LETTERS # A, B, and C, separately, exist as elements in LETTERS, to TRUE is returned three times
+
+c("A", "B", "C") == LETTERS # check the warning that appears
+
+```
+
+Caution: don't confuse the assignment operator `=` with the comparison operator `==`.
+
+### Exercise 5
+
+Is there a term in `my_plaintext` called "Chemical carcinogenesis"? How about "Chronic inflammation"?
+
+```{r}
+
+___ %in% my_plaintext$Term
+
+```
+
+Control structures allow us to ask R to make decisions about what code to run. The key structures are `if()`, `else`, `for()`, and `while()`.
+
+To write an `if()` statement, first specify the condition, then write commands to be run if the condition is satisfied.
+
+If the condition is not satisfied, then the commands in the `else {...}` block will be run, if one is present.
+
+It is possible to chain multiple `if()` statements by using `else if()`
+
+```{r}
+
+my_pvalue <- 0.01
+
+if(my_pvalue < 0.05) {                   # condition 1
+    cat("Significant p-value!\n")        # run if condition 1 is satisfied
+} else if(my_pvalue >= 0.05) {           # condition 2
+    cat("Not significant p-value...\n")  # run if condition 2 is satisfied
+}
+
+```
+
+### Exercise 6
+
+Change the code below to print significance stars to the screen: `***` for p-values better than 0.001, `**` for p-values better than 0.01, `*` for p-values better than 0.05, and `n.s.` for p-values worse or equal to 0.05. Change the value of `my_pvalue2` to test your code.
+
+```{r}
+
+my_pvalue2 <- 0.0001
+
+if(my_pvalue2 < 0.001) {       # condition 1: less than 0.001
+    cat("***\n")               # print ***
+} else if(my_pvalue2 < ___) {  # condition 2: less than 0.01
+    cat("___\n")               # print **
+} else if(___) {               # condition 3: less than 0.05
+    ___                        # print *
+} else if(___) ___             # condition 4: greater than or equal to 0.05
+                               # print n.s.
+
+```
+
+Sometimes we want to run code more than once, for example if we want to process all elements of a list in the same way.
+## The `for()` loop
+
+Iterate over a list using the `for()` loop.
+
+This means doing the same set of commands for each item in the loop.
+
+First, initialise a list of items that you're interested in.
+
+Then, write the commands to be done of those items in a `for()` loop code block.
+
+```{r}
+
+my_interest <- c("neuron", "membrane", "bacteria") # initialise a list of items to iterate over
+
+for(item in my_interest) { # go through the items in the my_interest list one by one
+    cat("I am interested in", item, "\n") # run these commands once per item
+    cat(toupper(item), "IS THE BEST!\n")
+}
+
+```
+
+You can iterate over a numerical range instead of items in a list.
+
+```{r}
+
+for(i in 1:10) {
+    cat("I am thinking of the number", i, "\n")
+}
+
+```
+
+You can iterate over a numerical range and use `i` as an index to subset data.
+
+```{r}
+
+for(i in 1:10) {
+    cat("The", i, "th column in my_plaintext is called", names(my_plaintext)[i], "\n")
+}
+
+```
+
+A `while()` loop combines the power of `if()` and `for()` in that it iterates until a condition is met.
+
+```{r}
+
+my_term <- ""                         # initialise a test variable
+i <- 1                                # initialise a counter
+while(!grepl("retinoic", my_term)) {  # iterate until we find “retinoic”:
+  my_term <- my_plaintext$Term[i]       # update the test variable
+  cat(as.character(my_term), "\n")                    # print to the screen
+  i <- i + 1                            # increment counter
+}
+
+```
+
+Reason with yourself why the code stopped after printing six lines. What would happen if you change "retinoic" into "hormone"?
+
+### Exercise 7
+
+Use a `for()` loop to find all of the Terms in `my_excel` which contain: a) "neuron", b) "membrane", c) "development". It's your choice whether you want to use base R functions or `dplyr` for the subsetting!
+
+```{r}
+
+my_interest2 <- c("neuron", ___, ___)
+
+# using base R
+for(item in my_interest2) {
+    idx8 <- grep(___, ___$___)
+    print(my_excel$___[___])
+}
+
+# using dplyr
+for(item in my_interest2) {
+    my_excel %>% filter(grepl(___, ___)) %>% select(___) %>% print()
+}
+
+# note: when inside a for loop, we need to call print() in order to output to the console
+
+```
+
+## Error handling
+
+We need to understand why errors and warnings occur. We need to understand which warnings can or cannot be ignored. We need to know how to deal with errors and fix them.
+
+Be warned. The following code will throw errors or warnings.
+
+```{r}
+
+
+read.csv(file = "non_existent_file.csv") # R can't find the file, so it threw an error and stopped execution
+
+
+
+
+my_warning <- c("hello", 1, 3e-9, FALSE) 
+#as.integer(my_warning) # R gave an error because it can't convert all the data into integers. We need to reassess that that's what we really want to do
+
+
+
+
+
+library(ggpubr) # R gave some general package warnings. These are safe to ignore, but always make sure that your output is sensible when using the package functions
+
+
+```
+
+### Exercise 8
+
+Run the following commands, which will throw warnings or errors. Reason with yourself or check online to understand what happened. Change the code to clear the error.
+
+```{r}
+
+
+log(-1)
+
+
+
+
+
+library(ggplto2)
+
+
+
+
+
+my_excel %>% filter(c(TRUE, TRUE, TRUE))
+
+
+```
+
+## Extension: regular expressions, dplyr advanced
+
+We use regular expressions to make pattern matching in text, for example when we use `filter()`, more powerful.
+
+Consider we want to filter for Terms in `my_excel` which include "synapse" or "synaptic". We could do the following:
+
+```{r}
+
+my_excel %>% filter(grepl("synap", Term)) %>% select(Term) # filter my_excel for terms including "synapse" or "synaptic"
+
+```
+
+With regular expressions, we can make even more powerful filters. What does the following code do?
+
+```{r}
+
+my_excel %>% filter(grepl("regulation.+synap", Term)) %>% select(Term) # filter my_excel for terms including "regulation" and then "synapse" or "synaptic"
+
+```
+
+All of the terms that we found have "regulation" in them, and then some other characters, and then either "synapse" or "synaptic".
+***NOTE:***
+An good resouce to search for regular expression syntax:
+https://regexr.com/
+
+Or just type ?regrex in R.
+
+### Free practice
+
+Find all of the terms in `my_excel` for which Overlap contains two digits, followed by a forward slash, followed by three digits.
+
+```{r}
+
+my_excel
+# \\d{2} means match 2 digits
+# / means match the forward slash
+# \\d{3} means match 3 digits
+
+```
+
+For the first 20 terms in `my_excel`, check if the GO tag is there, and if it is, print the term to the screen. If the term doesn't have a GO tag, print "uninteresting" to the screen instead.
+
+```{r}
+
+my_excel$Term
+# you'll need:
+  # for loop
+  # if statement
+  # else statement
+  # grep
+
+
+```
+
+The below code is intended to extract rows 2 to 1000 in `my_excel`, filter those rows for those with Odds Ratio above 100, and return the sum of all values in the Odds Ratio column for each gene set.
+
+Fix the errors in the below code.
+
+```{r}
+
+my_newdata <- my_excel[2:1000,] %>% filter(`Odds Ratio` > 100)
+
+for (geneset %in% unique(my_newdata$Gene_set)) {
+    my_loopdata <- my_newdata %>% filter(Gene_set = geneset)
+    my_sum <- sum(my_loopdata@`Odds Ratio`)
+    cat("The sum for", geenset, is, my_sum, "\n")
+}
+
+
+
+```
+
+Using slice() to select the fifth to eleventh rows in my_plaintext and show the results.
+Using slice_max() and slice_min() to select the first 5 rows with highest Odds.Ratio and lowest Adjusted.P.value, separately. Note that we need to ensure there are not NA exists in the values.
+
+```{r}
+my_plaintext %>% slice(_______)
+my_plaintext %>% slice_max(________,n=_)
+my_plaintext %>% slice_min(________,n=_)
+
+```
+
+Using mutate() to create a new column in my_plaintext,which named “New_column” and equals to the 10 folds of Odds.Ratio.
+
+```{r}
+my_plaintext %>%
+  ______(
+    New_column = _______
+  ) %>%
+  select(_______, everything())
+
+```
+Calculate the mean Odds.Ratio group by the Gene_set in my_plaintext.
+
+```{r}
+my_plaintext %>%
+_______(______) %>%
+  _________(mean_odds = mean(________))
+```
+
+Congratulations for reaching the end of this course!
