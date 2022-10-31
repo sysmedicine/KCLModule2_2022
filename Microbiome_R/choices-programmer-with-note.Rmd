@@ -3,6 +3,9 @@ title: "Choices of a programmer"
 author: "Simon Lam, Xiya Song"
 date: "30 October 2022"
 output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
@@ -14,11 +17,20 @@ options(max.print = 20)
 
 ## Introduction
 
-As an R programmer, you will have a number of choices to make during your analysis. There are many roads to Rome, and it is your individual choice as to how you wish to develop your developer skills. There are choices regarding which packages you want to install, which file formats you want to deal with, and how you deal with warnings and errors. All of this boils down to how you implement solutions to biological problems.
+As an R programmer, you will have a number of choices to make during
+your analysis. There are many roads to Rome, and it is your individual
+choice as to how you wish to develop your developer skills. There are
+choices regarding which packages you want to install, which file formats
+you want to deal with, and how you deal with warnings and errors. All of
+this boils down to how you implement solutions to biological problems.
 
-In today's course, we will explore data published in a recent paper. The exact nature of the study and data does not matter in order to understand today's course, but for those who are interested, the source study is linked here: https://doi.org/10.3390/biomedicines9101310.
+In today's course, we will explore data published in a recent paper. The
+exact nature of the study and data does not matter in order to
+understand today's course, but for those who are interested, the source
+study is linked here: <https://doi.org/10.3390/biomedicines9101310>.
 
-The files for today's course can be downloaded from: https://github.com/SimonLammmm/KCL-microbiome-2021-22.
+The files for today's course can be downloaded from:
+<https://github.com/SimonLammmm/KCL-microbiome-2021-22>.
 
 # My R crashed; what should I do?
 
@@ -26,12 +38,15 @@ The files for today's course can be downloaded from: https://github.com/SimonLam
 
 ```{r}
 
+###No need to run if R didn't crashed during the Exercise. Start from the Exercise 1 in the next cell.
 options(max.print = 20)
 library(readxl)
 library(writexl)
 library(dplyr)
 my_plaintext <- read.csv("terms.csv")
 my_excel <- read_excel("terms.xlsx")
+my_excel$`Odds Ratio` <- as.numeric(my_excel$`Odds Ratio`) # convert the Odds Ratio column to numeric
+my_excel$`Combined Score` <- as.numeric(my_excel$`Combined Score`) # convert the Combined Score column to numeric
 load("terms.RData")
 
 ```
@@ -40,21 +55,26 @@ If R hasn't crashed, then there's no need to run the above code.
 
 ## Reading and writing data to/from file
 
-Before starting, install `readxl` and `writexl` using `install.packages(c("readxl", "writexl", "dplyr", "ggplot2", "ggpubr"))`.
+Before starting, install `readxl` and `writexl` using
+`install.packages(c("readxl", "writexl", "dplyr", "ggplot2", "ggpubr"))`.
 
-***NOTE:***
-If you want to run only one line of the code, select the line and press CTRL+ENTER
+***NOTE:*** If you want to run only one line of the code, select the
+line and press CTRL+ENTER
 
 To read plaintext files, use `read.csv()`.
 
-***NOTE:***
-The default delimiter of the read.csv() function is a comma, but you can use other delimiters by supplying the ‘sep’ argument to the function (e.g., typing sep = ';' allows a semi-colon separated file to be correctly imported - see ?read.csv() for more information on this and other options for working with different file types).
+***NOTE:*** The default delimiter of the read.csv() function is a comma,
+but you can use other delimiters by supplying the 'sep' argument to the
+function (e.g., typing sep = ';' allows a semi-colon separated file to
+be correctly imported)
+
+See ?read.csv() for more information on this and other options for
+working with different file types).Or:Press Tab while your cursor is
+between the brackets of any function to see its usage.
 
 To read Excel files, use `read_excel()` from the `readxl` package.
 
 To read RData files, use `load()`.
-
-TIP: Press Tab while your cursor is between the brackets of any function to see its usage.
 
 ```{r}
 
@@ -68,10 +88,6 @@ my_plaintext <- read.csv("terms.csv") # read the plaintext file
 
 my_excel <- read_excel("terms.xlsx") # read the excel file
 
-my_excel$`Odds Ratio` <- as.numeric(my_excel$`Odds Ratio`) # convert the Odds Ratio column to numeric
-
-my_excel$`Combined Score` <- as.numeric(my_excel$`Combined Score`) # convert the Combined Score column to numeric
-
 load("terms.RData") # read the RData file
 
 ```
@@ -84,7 +100,9 @@ To write Excel files, use `write_xlsx()` from the `writexl` package.
 
 To write RData files, use `save()`.
 
-Complete the code below to save the `my_plaintext`, `my_excel`, and `my_rdata` objects to the files my_plaintext.csv, my_excel.xlsx, and my_rdata.RData, respectively.
+Complete the code below to save the `my_plaintext`, `my_excel`, and
+`my_rdata` objects to the files my_plaintext.csv, my_excel.xlsx, and
+my_rdata.RData, respectively.
 
 ```{r}
 
@@ -98,13 +116,17 @@ save(my_rdata, ___ = "___.RData") # save my_rdata to the file "my_rdata.RData"
 
 ```
 
-Which file would you give to 1) an R statistician, 2) a Python statistician, 3) a non-statistician?
+Which file would you give to 1) an R statistician, 2) a Python
+statistician, 3) a non-statistician?
 
 ## Data types in R
 
-When we load in our data, it's important to make sure that our data are stored as the correct data type.
+When we load in our data, it's important to make sure that our data are
+stored as the correct data type.
 
-Use `glimpse()` from the `dplyr` package to check the data types of each of the columns in `my_plaintext`, `my_excel`, and `my_rdata`. Do the data types make sense?
+Use `glimpse()` from the `dplyr` package to check the data types of each
+of the columns in `my_plaintext`, `my_excel`, and `my_rdata`. Do the
+data types make sense?
 
 ```{r}
 
@@ -120,7 +142,9 @@ glimpse(my_rdata) # check the data types in my_rdata
 
 ### Exercise 2
 
-In `my_excel`, say the Odds Ratio and Combined Score columns were numbers stored as characters. Complete the code to convert these columns into numeric data types using `as.numeric()`.
+In `my_excel`, say the Odds Ratio and Combined Score columns were
+numbers stored as characters. Complete the code to convert these columns
+into numeric data types using `as.numeric()`.
 
 ```{r}
 
@@ -164,10 +188,9 @@ Use `which()` to specify the indices of interest using numeric rules.
 
 Use `grep()` to specify the indices of interest by matching text.
 
-***NOTE:***
-grep is available for different kinds of pattern searching.
-Using the syntax: 
-grep(pattern, x, ignore.case = FALSE, perl = FALSE, value = FALSE,fixed = FALSE, useBytes = FALSE, invert = FALSE)
+***NOTE:*** grep is available for different kinds of pattern searching.
+Using the syntax: grep(pattern, x, ignore.case = FALSE, perl = FALSE,
+value = FALSE,fixed = FALSE, useBytes = FALSE, invert = FALSE)
 
 ```{r}
 
@@ -183,7 +206,8 @@ my_plaintext[idx2, ] # returns entire rows in which the terms contain "neuron"
 
 ### Exercise 3
 
-Use base R functions to extract the rows in `my_excel` which have Odds Ratio greater than 200.
+Use base R functions to extract the rows in `my_excel` which have Odds
+Ratio greater than 200.
 
 ```{r}
 
@@ -193,7 +217,8 @@ my_excel[___,___] # return entire rows for those indices
 
 ```
 
-Use base R functions to extract the rows in `my_excel` in which Term contains the text "membrane".
+Use base R functions to extract the rows in `my_excel` in which Term
+contains the text "membrane".
 
 ```{r}
 
@@ -205,35 +230,33 @@ ___[___,___] # return entire rows for those indices
 
 ## Subsetting with `dplyr`
 
-Use the pipe operator `%>%` to use the output of the left-hand side as the input for the right-hand side.
+Use the pipe operator `%>%` to use the output of the left-hand side as
+the input for the right-hand side.
 
 Use the `select()` verb to subset entire columns by name or number.
 
-***NOTE:***
-select:
-The : operator selects a range of consecutive variables
-The ! operator negates a selection
+***NOTE:*** select: The : operator selects a range of consecutive
+variables The ! operator negates a selection
 
-Use the `filter()` verb to subset rows according to numeric or character rules.
-
-
-
+Use the `filter()` verb to subset rows according to numeric or character
+rules.
 
 ```{r}
 
 my_plaintext %>% glimpse()
 
-my_plaintext %>% select(Term, 3, `Odds.Ratio`)
+my_plaintext %>% select(Term, 3, Odds.Ratio)
 #my_plaintext %>% select(c(Term, Overlap, P.value))
 #my_plaintext %>% select(!c(Term, Overlap, P.value))
 
-my_plaintext %>% filter(`Combined.Score` > 1000)
+my_plaintext %>% filter(Combined.Score > 1000)
 
 ```
 
 ### Exercise 4
 
-Use `dplyr` functions to extract the rows in `my_excel` which have Odds Ratio greater than 200
+Use `dplyr` functions to extract the rows in `my_excel` which have Odds
+Ratio greater than 200
 
 ```{r}
 
@@ -241,13 +264,13 @@ my_excel %>% filter(___ > ___)
 
 ```
 
-Use `dplyr` functions to extract the rows in `my_excel` in which Term contains the text "membrane". (Advanced)
+Use `dplyr` functions to extract the rows in `my_excel` in which Term
+contains the text "membrane". (Advanced)
 
-***NOTE:***
-grepl with grep: 
-The grepl() stands for “grep logical”.
-**grep()** return vector of indices of the element if a pattern exists in that vector.
-**grepl()** return TRUE if the given pattern is present in the vector. Otherwise, it return FALSE.
+***NOTE:*** grepl with grep: The grepl() stands for "grep logical".
+**grep()** return vector of indices of the element if a pattern exists
+in that vector. **grepl()** return TRUE if the given pattern is present
+in the vector. Otherwise, it return FALSE.
 
 ```{r}
 
@@ -259,7 +282,9 @@ Reason with yourself why needed to call `grepl()` within `filter()`.
 
 ### Free practice
 
-Write code to extract all Terms in `my_excel` containing the text "neuron" for which P-value is less than 10^-4. It's your choice whether you use base R functions or `dplyr` functions!
+Write code to extract all Terms in `my_excel` containing the text
+"neuron" for which P-value is less than 10\^-4. It's your choice whether
+you use base R functions or `dplyr` functions!
 
 ```{r}
 
@@ -275,17 +300,22 @@ my_excel
 
 ## Operators and control structures
 
-We use binary operators in our code to manipulate objects in R. They are binary operators because they take an input on the left-hand side (LHS) and an input on the right-hand side (RHS).
+We use binary operators in our code to manipulate objects in R. They are
+binary operators because they take an input on the left-hand side (LHS)
+and an input on the right-hand side (RHS).
 
 Standard math operators: `+`, `-`, `*`, `/`, `^`.
 
 Modulo operator: `%%`. Modulo means the remainder after a division.
 
-Element matching operator: `%in%`. This asks what elements on the LHS are also on the RHS.
+Element matching operator: `%in%`. This asks what elements on the LHS
+are also on the RHS.
 
-Comparison operator: `==`. This asks whether the LHS is exactly the same as RHS.
+Comparison operator: `==`. This asks whether the LHS is exactly the same
+as RHS.
 
-Question: what is the difference between `%in%` and `==`? What is the difference in the output?
+Question: what is the difference between `%in%` and `==`? What is the
+difference in the output?
 
 ```{r}
 
@@ -295,11 +325,13 @@ c("A", "B", "C") == LETTERS # check the warning that appears
 
 ```
 
-Caution: don't confuse the assignment operator `=` with the comparison operator `==`.
+Caution: don't confuse the assignment operator `=` with the comparison
+operator `==`.
 
 ### Exercise 5
 
-Is there a term in `my_plaintext` called "Chemical carcinogenesis"? How about "Chronic inflammation"?
+Is there a term in `my_plaintext` called "Chemical carcinogenesis"? How
+about "Chronic inflammation"?
 
 ```{r}
 
@@ -307,11 +339,14 @@ ___ %in% my_plaintext$Term
 
 ```
 
-Control structures allow us to ask R to make decisions about what code to run. The key structures are `if()`, `else`, `for()`, and `while()`.
+Control structures allow us to ask R to make decisions about what code
+to run. The key structures are `if()`, `else`, `for()`, and `while()`.
 
-To write an `if()` statement, first specify the condition, then write commands to be run if the condition is satisfied.
+To write an `if()` statement, first specify the condition, then write
+commands to be run if the condition is satisfied.
 
-If the condition is not satisfied, then the commands in the `else {...}` block will be run, if one is present.
+If the condition is not satisfied, then the commands in the `else {...}`
+block will be run, if one is present.
 
 It is possible to chain multiple `if()` statements by using `else if()`
 
@@ -329,7 +364,10 @@ if(my_pvalue < 0.05) {                   # condition 1
 
 ### Exercise 6
 
-Change the code below to print significance stars to the screen: `***` for p-values better than 0.001, `**` for p-values better than 0.01, `*` for p-values better than 0.05, and `n.s.` for p-values worse or equal to 0.05. Change the value of `my_pvalue2` to test your code.
+Change the code below to print significance stars to the screen: `***`
+for p-values better than 0.001, `**` for p-values better than 0.01, `*`
+for p-values better than 0.05, and `n.s.` for p-values worse or equal to
+0.05. Change the value of `my_pvalue2` to test your code.
 
 ```{r}
 
@@ -346,8 +384,8 @@ if(my_pvalue2 < 0.001) {       # condition 1: less than 0.001
 
 ```
 
-Sometimes we want to run code more than once, for example if we want to process all elements of a list in the same way.
-## The `for()` loop
+Sometimes we want to run code more than once, for example if we want to
+process all elements of a list in the same way. \## The `for()` loop
 
 Iterate over a list using the `for()` loop.
 
@@ -355,12 +393,13 @@ This means doing the same set of commands for each item in the loop.
 
 First, initialise a list of items that you're interested in.
 
-Then, write the commands to be done of those items in a `for()` loop code block.
+Then, write the commands to be done of those items in a `for()` loop
+code block.
 
 ```{r}
 
 my_interest <- c("neuron", "membrane", "bacteria") # initialise a list of items to iterate over
-
+#toupper() Changes the case to upper.
 for(item in my_interest) { # go through the items in the my_interest list one by one
     cat("I am interested in", item, "\n") # run these commands once per item
     cat(toupper(item), "IS THE BEST!\n")
@@ -378,7 +417,8 @@ for(i in 1:10) {
 
 ```
 
-You can iterate over a numerical range and use `i` as an index to subset data.
+You can iterate over a numerical range and use `i` as an index to subset
+data.
 
 ```{r}
 
@@ -388,7 +428,8 @@ for(i in 1:10) {
 
 ```
 
-A `while()` loop combines the power of `if()` and `for()` in that it iterates until a condition is met.
+A `while()` loop combines the power of `if()` and `for()` in that it
+iterates until a condition is met.
 
 ```{r}
 
@@ -402,11 +443,14 @@ while(!grepl("retinoic", my_term)) {  # iterate until we find “retinoic”:
 
 ```
 
-Reason with yourself why the code stopped after printing six lines. What would happen if you change "retinoic" into "hormone"?
+Reason with yourself why the code stopped after printing six lines. What
+would happen if you change "retinoic" into "hormone"?
 
 ### Exercise 7
 
-Use a `for()` loop to find all of the Terms in `my_excel` which contain: a) "neuron", b) "membrane", c) "development". It's your choice whether you want to use base R functions or `dplyr` for the subsetting!
+Use a `for()` loop to find all of the Terms in `my_excel` which contain:
+a) "neuron", b) "membrane", c) "development". It's your choice whether
+you want to use base R functions or `dplyr` for the subsetting!
 
 ```{r}
 
@@ -429,7 +473,9 @@ for(item in my_interest2) {
 
 ## Error handling
 
-We need to understand why errors and warnings occur. We need to understand which warnings can or cannot be ignored. We need to know how to deal with errors and fix them.
+We need to understand why errors and warnings occur. We need to
+understand which warnings can or cannot be ignored. We need to know how
+to deal with errors and fix them.
 
 Be warned. The following code will throw errors or warnings.
 
@@ -448,14 +494,17 @@ my_warning <- c("hello", 1, 3e-9, FALSE)
 
 
 
-library(ggpubr) # R gave some general package warnings. These are safe to ignore, but always make sure that your output is sensible when using the package functions
+library(ggpubr) # R gave some general package warnings. These are safe to ignore, but always make sure that your output is sensible when using the package functions.
 
+my_excel[100]
 
 ```
 
 ### Exercise 8
 
-Run the following commands, which will throw warnings or errors. Reason with yourself or check online to understand what happened. Change the code to clear the error.
+Run the following commands, which will throw warnings or errors. Reason
+with yourself or check online to understand what happened. Change the
+code to clear the error.
 
 ```{r}
 
@@ -479,9 +528,11 @@ my_excel %>% filter(c(TRUE, TRUE, TRUE))
 
 ## Extension: regular expressions, dplyr advanced
 
-We use regular expressions to make pattern matching in text, for example when we use `filter()`, more powerful.
+We use regular expressions to make pattern matching in text, for example
+when we use `filter()`, more powerful.
 
-Consider we want to filter for Terms in `my_excel` which include "synapse" or "synaptic". We could do the following:
+Consider we want to filter for Terms in `my_excel` which include
+"synapse" or "synaptic". We could do the following:
 
 ```{r}
 
@@ -489,24 +540,25 @@ my_excel %>% filter(grepl("synap", Term)) %>% select(Term) # filter my_excel for
 
 ```
 
-With regular expressions, we can make even more powerful filters. What does the following code do?
+With regular expressions, we can make even more powerful filters. What
+does the following code do?
 
 ```{r}
-
 my_excel %>% filter(grepl("regulation.+synap", Term)) %>% select(Term) # filter my_excel for terms including "regulation" and then "synapse" or "synaptic"
 
 ```
 
-All of the terms that we found have "regulation" in them, and then some other characters, and then either "synapse" or "synaptic".
-***NOTE:***
+All of the terms that we found have "regulation" in them, and then some
+other characters, and then either "synapse" or "synaptic". ***NOTE:***
 An good resouce to search for regular expression syntax:
-https://regexr.com/
+<https://regexr.com/>
 
 Or just type ?regrex in R.
 
 ### Free practice
 
-Find all of the terms in `my_excel` for which Overlap contains two digits, followed by a forward slash, followed by three digits.
+Find all of the terms in `my_excel` for which Overlap contains two
+digits, followed by a forward slash, followed by three digits.
 
 ```{r}
 
@@ -517,7 +569,9 @@ my_excel
 
 ```
 
-For the first 20 terms in `my_excel`, check if the GO tag is there, and if it is, print the term to the screen. If the term doesn't have a GO tag, print "uninteresting" to the screen instead.
+For the first 20 terms in `my_excel`, check if the GO tag is there, and
+if it is, print the term to the screen. If the term doesn't have a GO
+tag, print "uninteresting" to the screen instead.
 
 ```{r}
 
@@ -531,7 +585,9 @@ my_excel$Term
 
 ```
 
-The below code is intended to extract rows 2 to 1000 in `my_excel`, filter those rows for those with Odds Ratio above 100, and return the sum of all values in the Odds Ratio column for each gene set.
+The below code is intended to extract rows 2 to 1000 in `my_excel`,
+filter those rows for those with Odds Ratio above 100, and return the
+sum of all values in the Odds Ratio column for each gene set.
 
 Fix the errors in the below code.
 
@@ -549,8 +605,10 @@ for (geneset %in% unique(my_newdata$Gene_set)) {
 
 ```
 
-Using slice() to select the fifth to eleventh rows in my_plaintext and show the results.
-Using slice_max() and slice_min() to select the first 5 rows with highest Odds.Ratio and lowest Adjusted.P.value, separately. Note that we need to ensure there are not NA exists in the values.
+Using slice() to select the fifth to eleventh rows in my_plaintext and
+show the results. Using slice_max() and slice_min() to select the first
+5 rows with highest Odds.Ratio and lowest Adjusted.P.value, separately.
+Note that we need to ensure there are not NA exists in the values.
 
 ```{r}
 my_plaintext %>% slice(_______)
@@ -559,7 +617,8 @@ my_plaintext %>% slice_min(________,n=_)
 
 ```
 
-Using mutate() to create a new column in my_plaintext,which named “New_column” and equals to the 10 folds of Odds.Ratio.
+Using mutate() to create a new column in my_plaintext,which named
+"New_column" and equals to the 10 folds of Odds.Ratio.
 
 ```{r}
 my_plaintext %>%
@@ -569,6 +628,7 @@ my_plaintext %>%
   select(_______, everything())
 
 ```
+
 Calculate the mean Odds.Ratio group by the Gene_set in my_plaintext.
 
 ```{r}

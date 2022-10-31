@@ -383,12 +383,15 @@ study is linked here: <a href="https://doi.org/10.3390/biomedicines9101310" clas
 <div id="if-r-crashes-during-the-course-run-the-following-code-and-youll-be-ready-to-pick-up-from-where-you-left-off" class="section level3">
 <h3>If R crashes during the course, run the following code and you’ll be
 ready to pick up from where you left off:</h3>
-<pre class="r"><code>options(max.print = 20)
+<pre class="r"><code>###No need to run if R didn&#39;t crashed during the Exercise. Start from the Exercise 1 in the next cell.
+options(max.print = 20)
 library(readxl)
 library(writexl)
 library(dplyr)
 my_plaintext &lt;- read.csv(&quot;terms.csv&quot;)
 my_excel &lt;- read_excel(&quot;terms.xlsx&quot;)
+my_excel$`Odds Ratio` &lt;- as.numeric(my_excel$`Odds Ratio`) # convert the Odds Ratio column to numeric
+my_excel$`Combined Score` &lt;- as.numeric(my_excel$`Combined Score`) # convert the Combined Score column to numeric
 load(&quot;terms.RData&quot;)</code></pre>
 <p>If R hasn’t crashed, then there’s no need to run the above code.</p>
 </div>
@@ -403,14 +406,13 @@ the code, select the line and press CTRL+ENTER</p>
 <p><strong><em>NOTE:</em></strong> The default delimiter of the
 read.csv() function is a comma, but you can use other delimiters by
 supplying the ‘sep’ argument to the function (e.g., typing sep = ‘;’
-allows a semi-colon separated file to be correctly imported - see
-?read.csv() for more information on this and other options for working
-with different file types).</p>
+allows a semi-colon separated file to be correctly imported)</p>
+<p>See ?read.csv() for more information on this and other options for
+working with different file types).Or:Press Tab while your cursor is
+between the brackets of any function to see its usage.</p>
 <p>To read Excel files, use <code>read_excel()</code> from the
 <code>readxl</code> package.</p>
 <p>To read RData files, use <code>load()</code>.</p>
-<p>TIP: Press Tab while your cursor is between the brackets of any
-function to see its usage.</p>
 <pre class="r"><code>install.packages(c(&quot;readxl&quot;, &quot;writexl&quot;, &quot;dplyr&quot;, &quot;ggplot2&quot;, &quot;ggpubr&quot;)) # install the required packages for today
 
 options(max.print = 20) # don&#39;t let R spam the console
@@ -420,10 +422,6 @@ library(readxl) # load the readxl package
 my_plaintext &lt;- read.csv(&quot;terms.csv&quot;) # read the plaintext file
 
 my_excel &lt;- read_excel(&quot;terms.xlsx&quot;) # read the excel file
-
-my_excel$`Odds Ratio` &lt;- as.numeric(my_excel$`Odds Ratio`) # convert the Odds Ratio column to numeric
-
-my_excel$`Combined Score` &lt;- as.numeric(my_excel$`Combined Score`) # convert the Combined Score column to numeric
 
 load(&quot;terms.RData&quot;) # read the RData file</code></pre>
 <div id="exercise-1" class="section level3">
@@ -534,11 +532,11 @@ range of consecutive variables The ! operator negates a selection</p>
 numeric or character rules.</p>
 <pre class="r"><code>my_plaintext %&gt;% glimpse()
 
-my_plaintext %&gt;% select(Term, 3, `Odds.Ratio`)
+my_plaintext %&gt;% select(Term, 3, Odds.Ratio)
 #my_plaintext %&gt;% select(c(Term, Overlap, P.value))
 #my_plaintext %&gt;% select(!c(Term, Overlap, P.value))
 
-my_plaintext %&gt;% filter(`Combined.Score` &gt; 1000)</code></pre>
+my_plaintext %&gt;% filter(Combined.Score &gt; 1000)</code></pre>
 <div id="exercise-4" class="section level3">
 <h3>Exercise 4</h3>
 <p>Use <code>dplyr</code> functions to extract the rows in
@@ -633,7 +631,7 @@ loop.</p>
 <p>Then, write the commands to be done of those items in a
 <code>for()</code> loop code block.</p>
 <pre class="r"><code>my_interest &lt;- c(&quot;neuron&quot;, &quot;membrane&quot;, &quot;bacteria&quot;) # initialise a list of items to iterate over
-
+#toupper() Changes the case to upper.
 for(item in my_interest) { # go through the items in the my_interest list one by one
     cat(&quot;I am interested in&quot;, item, &quot;\n&quot;) # run these commands once per item
     cat(toupper(item), &quot;IS THE BEST!\n&quot;)
@@ -700,12 +698,9 @@ my_warning &lt;- c(&quot;hello&quot;, 1, 3e-9, FALSE)
 
 
 
-library(ggpubr) # R gave some general package warnings. These are safe to ignore, but always make sure that your output is sensible when using the package functions
+library(ggpubr) # R gave some general package warnings. These are safe to ignore, but always make sure that your output is sensible when using the package functions.
 
-
-
-
-my_excel[100] # for more complicated errors, search the error description online</code></pre>
+my_excel[100]</code></pre>
 <div id="exercise-8" class="section level3">
 <h3>Exercise 8</h3>
 <p>Run the following commands, which will throw warnings or errors.
@@ -726,8 +721,8 @@ library(ggplto2)
 my_excel %&gt;% filter(c(TRUE, TRUE, TRUE))</code></pre>
 </div>
 </div>
-<div id="extension-regular-expressions" class="section level2">
-<h2>Extension: regular expressions</h2>
+<div id="extension-regular-expressions-dplyr-advanced" class="section level2">
+<h2>Extension: regular expressions, dplyr advanced</h2>
 <p>We use regular expressions to make pattern matching in text, for
 example when we use <code>filter()</code>, more powerful.</p>
 <p>Consider we want to filter for Terms in <code>my_excel</code> which
@@ -771,13 +766,26 @@ for (geneset %in% unique(my_newdata$Gene_set)) {
     my_sum &lt;- sum(my_loopdata@`Odds Ratio`)
     cat(&quot;The sum for&quot;, geenset, is, my_sum, &quot;\n&quot;)
 }</code></pre>
-<p>Using mutate() to create a new column in the my_plaintext,which named
+<p>Using slice() to select the fifth to eleventh rows in my_plaintext
+and show the results. Using slice_max() and slice_min() to select the
+first 5 rows with highest Odds.Ratio and lowest Adjusted.P.value,
+separately. Note that we need to ensure there are not NA exists in the
+values.</p>
+<pre class="r"><code>my_plaintext %&gt;% slice(_______)
+my_plaintext %&gt;% slice_max(________,n=_)
+my_plaintext %&gt;% slice_min(________,n=_)</code></pre>
+<p>Using mutate() to create a new column in my_plaintext,which named
 “New_column” and equals to the 10 folds of Odds.Ratio.</p>
 <pre class="r"><code>my_plaintext %&gt;%
   ______(
     New_column = _______
   ) %&gt;%
   select(_______, everything())</code></pre>
+<p>Calculate the mean Odds.Ratio group by the Gene_set in
+my_plaintext.</p>
+<pre class="r"><code>my_plaintext %&gt;%
+_______(______) %&gt;%
+  _________(mean_odds = mean(________))</code></pre>
 <p>Congratulations for reaching the end of this course!</p>
 </div>
 </div>
