@@ -2,55 +2,15 @@
 title: "Metagenomic visualization"
 author: "Hong Yang (hong.yang@kcl.ac.uk)"
 date: "03/11/2022"
-output: html_document
 ---
 
 In this workshop, we will learn how to visualize data using R. we will use the output generated in previous sessions, including abundance data from quantification and results statistical analysis. 
 
-### Tips:
-- Some basic shortcut when you manage your code in .Rmd file
-- ![keyboard shortcut for](exp_figure/Screenshot 2021-10-27 at 10.24.33.png){width=10%} in MAC: option + command + i 
-- ![keyboard shortcut for](exp_figure/Screenshot 2021-10-27 at 10.24.33.png){width=10%} in windows: Ctrl + Alt + i
-- keyboard shortcut for %>% in MAC: shift + command + m
-- keyboard shortcut for %>% in windows: shift + Ctrl + m
-
 ### 1. what kinds of plot we can find in a metagenomic-associated paper?
-We will look over several papers, e.g,
-
-- Paper 1:
-
-#### Bar plot
-- [Fig2 in paper 1: Stunted microbiota and opportunistic pathogen colonization in caesarean-section birth](https://www.nature.com/articles/s41586-019-1560-1)
-
-a. Stacked barplot
-
-![](exp_figure/41586_2019_1560_Fig2_HTML2.jpg){width=50%}
-
-
-- [Fig6 in paper 2: Genome-resolved metagenomics reveals site-specific diversity of episymbiotic CPR bacteria and DPANN archaea in groundwater ecosystems](https://www.nature.com/articles/s41564-020-00840-5)
-
-b. Side-by-side barplot
-
-![](exp_figure/Figure6.bar.jpg){width=50%}
-
-- Paper 2:
+We will look over several papers,please refer to the html file in the same folder.
 
 #### Boxplot
-
-![Analysis of host attachment and growth rates of CPR/DPANN organisms.)](exp_figure/Figure6.boxplot.png){width=50%}
-
-- Paper 3:
-
 #### Heatmap
-- [Fig4 in paper 3: Commensal bacteria promote endocrine resistance in prostate cancer through androgen biosynthesis](https://www.science.org/doi/10.1126/science.abf8403)
-
-![.Heat map representing differentially abundant bacterial species (false discovery rate < 0.01) between HSPC and CRPC.](exp_figure/Heatmap2.jpeg){width=80%}
-
-
-
-
-
-
 
 ### 2. Load necessary packages for this session
 
@@ -127,7 +87,7 @@ dim(phylo_obj@otu_table)
 #number of OTUs after filtering
 dim(phylo_obj_filter@otu_table)
 ```
-This results in a highly-subsetted object, phylo_obj_filter, containing just 147 of the original ~370 OTUs. 
+
 
 #### 3.3 Preprocessing, subset most abundant OTUs
 
