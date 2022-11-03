@@ -1,0 +1,563 @@
+---
+title: "Metagenomic visualization"
+author: "Hong Yang (hong.yang@kcl.ac.uk)"
+date: "03/11/2022"
+output: html_document
+---
+
+In this workshop, we will learn how to visualize data using R. we will use the output generated in previous sessions, including abundance data from quantification and results statistical analysis. 
+
+### Tips:
+- Some basic shortcut when you manage your code in .Rmd file
+- ![keyboard shortcut for](exp_figure/Screenshot 2021-10-27 at 10.24.33.png){width=10%} in MAC: option + command + i 
+- ![keyboard shortcut for](exp_figure/Screenshot 2021-10-27 at 10.24.33.png){width=10%} in windows: Ctrl + Alt + i
+- keyboard shortcut for %>% in MAC: shift + command + m
+- keyboard shortcut for %>% in windows: shift + Ctrl + m
+
+### 1. what kinds of plot we can find in a metagenomic-associated paper?
+We will look over several papers, e.g,
+
+- Paper 1:
+
+#### Bar plot
+- [Fig2 in paper 1: Stunted microbiota and opportunistic pathogen colonization in caesarean-section birth](https://www.nature.com/articles/s41586-019-1560-1)
+
+a. Stacked barplot
+
+![](exp_figure/41586_2019_1560_Fig2_HTML2.jpg){width=50%}
+
+
+- [Fig6 in paper 2: Genome-resolved metagenomics reveals site-specific diversity of episymbiotic CPR bacteria and DPANN archaea in groundwater ecosystems](https://www.nature.com/articles/s41564-020-00840-5)
+
+b. Side-by-side barplot
+
+![](exp_figure/Figure6.bar.jpg){width=50%}
+
+- Paper 2:
+
+#### Boxplot
+
+![Analysis of host attachment and growth rates of CPR/DPANN organisms.)](exp_figure/Figure6.boxplot.png){width=50%}
+
+- Paper 3:
+
+#### Heatmap
+- [Fig4 in paper 3: Commensal bacteria promote endocrine resistance in prostate cancer through androgen biosynthesis](https://www.science.org/doi/10.1126/science.abf8403)
+
+![.Heat map representing differentially abundant bacterial species (false discovery rate < 0.01) between HSPC and CRPC.](exp_figure/Heatmap2.jpeg){width=80%}
+
+
+
+
+
+
+
+### 2. Load necessary packages for this session
+
+```{r, message=FALSE}
+## A list of packages that we will use for this session
+pkgs = c("tidyverse","ggplot2","phyloseq","ggpubr","stringr","dutchmasters","ggsci","devtools")
+
+## Install the package if it has't been installed yet
+for (i in pkgs){
+  if(! i %in% installed.packages()){
+    BiocManager::install(i, ask = F, update = F)
+  }
+}
+## Load all the packages
+invisible(lapply(pkgs, function(x) library(x, character.only=TRUE)))
+
+## Alterative way for smplot
+devtools::install_github('smin95/smplot')
+library(smplot)
+## remove the intermediate variables
+rm(pkgs, i)
+```
+
+
+### 3. Load metageneomics data and preprocess data
+#### 3.1 Load phyloseq object and results from statistical analysis
+```{r, message=FALSE}
+## phyloseq object that you generated
+load('phyloseq_object_relative_abundance_2022.Rdata')
+## Results from statistical analysis
+load('Alpha_diversity_by_read.Rdata')
+```
+
+- Data structure of phyloseq object
+
+```{r}
+phylo_obj
+```
+- sample data
+```{r}
+phylo_obj@sam_data[1:3,1:5]
+```
+- otu table
+```{r}
+phylo_obj@otu_table[1:3,1:3]
+```
+- tax table
+```{r}
+phylo_obj@tax_table[1:3,1:3]
+```
+
+#### 3.2 Preprocessing, filter OTUs based on abundance
+- Why?
+
+```{r}
+pheatmap::pheatmap(phylo_obj@otu_table)
+```
+
+- How?
+
+```{r}
+#e.g., only OTUs with a mean greater than 10^-5 are kept.
+phylo_obj_filter = filter_taxa(phylo_obj, function(x) mean(x) > 1e-5, TRUE)
+```
+
+- Difference?
+
+```{r}
+#number of OTUs in orignial phyloseq object.
+dim(phylo_obj@otu_table)
+```
+
+```{r}
+#number of OTUs after filtering
+dim(phylo_obj_filter@otu_table)
+```
+This results in a highly-subsetted object, phylo_obj_filter, containing just 147 of the original ~370 OTUs. 
+
+#### 3.3 Preprocessing, subset most abundant OTUs
+
+```{r}
+total = median(sample_sums(phylo_obj_filter))
+abundant_OTU = filter_taxa(phylo_obj_filter, function(x) sum(x > total*0.20) > 0, TRUE)
+abundant_OTU
+```
+
+
+### 4. Visualization
+#### 4.1 data transition for plotting
+- use psmelt() function to combine three data tables in phyloseq object
+
+```{r}
+pd = psmelt(phylo_obj_filter)
+pd_abundant = psmelt(abundant_OTU)
+head(pd)
+```
+
+6762 obs. of 15 variables
+
+- formatting step for data of abundance
+```{r}
+pd = pd %>% mutate(Kingdom = str_replace(Kingdom, 'k__',''),
+                   Phylum = str_replace(Phylum, 'p__',''),
+                   Class = str_replace(Class, 'c__',''),
+                   Order = str_replace(Order, 'o__',''),
+                   Family = str_replace(Family, 'f__',''),
+                   Genus = str_replace(Genus, 'g__',''),
+                   Species = str_replace(Species, 's__',''))
+pd[1:3,9:12]
+```
+
+-  formatting step for results from statistical analysis
+```{r}
+head(Adiv)
+```
+
+- Add metadata to the table
+```{r}
+Adiv_meta = Adiv %>% mutate(SampleID = rownames(.)) %>%
+  right_join(SampleData, by = 'SampleID') %>%
+  select(SampleID, everything())
+head(Adiv_meta)
+```
+
+- Check the column name of combined data.frame
+```{r}
+colnames(Adiv_meta)
+```
+
+#### 4.2 Creat graph in R 
+- ggplot + geom_?() functions
+```{r}
+## Create a basic layer by setting up the x- and y-axis of graph
+p1 = ggplot(Adiv_meta, aes(x = SampleID, y = BMI))
+
+## Add the second layer, like barplot 
+p2 = ggplot(Adiv_meta, aes(x = SampleID, y = BMI)) + geom_bar(stat = 'identity')
+
+## Add the second layer, like barplot (side-by-side)
+p3 = ggplot(Adiv_meta, aes(x = SampleID, y = BMI, fill = Gender)) + 
+  geom_bar(stat = 'identity', position = position_dodge())
+
+## Add the second layer, like barplot (stacked)
+p4 = ggplot(Adiv_meta, aes(x = Condition, y = BMI, fill = Gender)) + 
+  geom_bar(stat = 'identity',position = "fill")
+
+## Add the second layer, like boxplot
+p5 = ggplot(Adiv_meta, aes(x = Condition, y = BMI)) + 
+  geom_boxplot()
+
+## Add the second layer, like heatmap
+p6 = ggplot(Adiv_meta, aes(x = SampleID, y = '')) + 
+  geom_tile(aes(fill = BMI))
+
+ggarrange(p1,p2,p3,p4,p5,p6, labels = c("p1", "p2", "p3", "p4","p5","p6"))
+```
+
+##### [summary of Geoms in ggplot] 
+- ggplot() + geom_bar(), create a bar plot
+- ggplot() + geom_violin(), create a violin plot
+- ggplot() + geom_boxplot(), create a boxplot
+- ggplot() + geom_tile(), create a heatnmap
+...
+
+[Check more Geoms](https://ggplot2.tidyverse.org/reference/#layers) 
+
+##### [exercise] 
+- create a violin plot and shows the difference of BMI between Conditions
+```{r}
+# Add your code below:
+
+```
+
+Q: how to improve these graphs, in case:
+
+- change the color?
+- fix the crowded x-axis labels?
+- add a title to my graph?
+- remove title in x.asix and/or y.axis?
+...
+
+you name it!
+
+#### 4.3 Graph theme, including default theme and alternative theme
+- Components of the graph and corresponding functions that can be used
+```{r}
+### create a graph using default theme
+p = ggplot(Adiv_meta, aes(x = Condition, y = BMI)) + 
+  geom_boxplot() + 
+  ggtitle('default theme')
+
+## add the third layer with customized theme 
+## change the theme and check the difference between these existed themes
+p1 = p + theme_bw() + ggtitle('theme_bw()')
+p2 = p + theme_linedraw() + ggtitle('theme_linedraw()')
+p3 = p + theme_classic() + ggtitle('theme_classic()')
+p4 = p + theme_dark() + ggtitle('theme_dark()')
+p5 = p + theme_minimal() + ggtitle('theme_minimal()')
+
+### arrange above plots into one and display
+ggarrange(p,p1,p2,p3,p4,p5, labels = c("p", "p1","p2","p3","p4","p5"))
+```
+
+#### 4.4 Modify theme as you prefer
+
+To modify an individual theme component you use code like plot + theme(element.name = element_function()). 
+
+1. element.name including axis.title, axis.title.x (axis.title.y), axis.text.x (or axis.text.y),legend.position, ect. 
+2. element_function() including element_text(), element_blank()
+- element_text(), will show the text in the graph
+- element_blank(), will remove the text in the graph
+
+- [Modify components of a theme](https://ggplot2.tidyverse.org/reference/theme.html)
+
+For example:
+```{r}
+p = ggplot(Adiv_meta, aes(x = Condition, y = BMI)) + 
+  geom_boxplot()  +
+  theme_classic() +
+  ggtitle('theme_classic()')
+
+# add argument inside of geom_boxplot() function, e.g, fill and width
+p1 = ggplot(Adiv_meta, aes(x = Condition, y = BMI)) + 
+  geom_boxplot(aes(fill = Condition))  +
+  theme_classic() +
+  ggtitle('change width and color of box')
+
+# in case, the length of text is too long, we can rotate the label. 
+# change the color of title and text in x-axis
+# customize this argument within theme function: axis.title.x or axis.title.y 
+# for example:
+p2 = ggplot(Adiv_meta, aes(x = Condition, y = BMI)) + 
+  geom_boxplot(aes(fill = Condition))  +
+  theme_classic() +
+  ggtitle('change color of x.title') +
+  theme(axis.title.x = element_text(colour = 'red'))
+
+# Multiple modification
+# Modify the graph by
+# change the color of title in x-axis
+# rotate x-axis text
+# change the legend position and
+
+p3 = ggplot(Adiv_meta, aes(x = Condition, y = BMI)) + 
+  geom_boxplot(aes(fill = Condition))  +
+  theme_classic() +
+  ggtitle('after mutiple modification') +
+  theme(axis.title.x = element_text(colour = 'red'),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = .5, colour = 'red'),
+        legend.position = 'left') # can be in left, bottom, top, or none
+
+ggarrange(p, p1, p2, p3, labels = c("p", "p1", "p2","p3"))
+```
+
+##### The relative abundance of bacterial at the Phylum level in each sample
+
+- check all the column names of pd that contains abundance
+
+```{r}
+colnames(pd)
+```
+
+```{r}
+ggplot(data = pd, aes(x = Sample, y = Abundance, fill = Class)) + 
+  geom_bar(stat = 'identity',position = "fill")
+```
+
+
+#### [exercise]:
+
+how to solve the staked x-axis label?
+
+- use theme() function to modify it. 
+
+```{r}
+# add your code here:
+
+
+```
+
+#### [exercise]:
+
+how to change the float to percentage on y-axis label?
+
+- use scale_y_continuous() function to modify it. 
+
+```{r}
+# add your code here:
+
+```
+
+##### how to add condition information of each sample
+- use facet_grid() or facet_wrap()
+- check the usage of these function using ?function in console.
+
+```{r}
+ggplot(data = pd, aes(x = Gender, y = Abundance)) + 
+  geom_bar(stat = 'identity',position = "fill", aes(fill = Class)) +
+  theme_classic2() +
+  facet_grid(. ~ Condition, scales="free")
+```
+
+
+#### 4.5 Modify the color of bar/box
+- use scale_fill_manual() function
+- A color can be specified either by name (e.g.: “red”) or by hexadecimal code (e.g. : “#FF1234”) 
+- please keep in mind that the number of colors you assign on your data should be same as the number of groups
+
+```{r}
+length(unique(pd$Class))
+```
+So, we need to supply 15 different colors to the corresponding bacterial at class level.
+- [colors in R](http://www.sthda.com/english/wiki/colors-in-r)
+
+```{r}
+ggplot(data = pd, aes(x = Sample, y = Abundance)) + 
+  geom_bar(stat = 'identity',position = "fill", aes(fill = Class), width = 2) +
+  theme_classic2() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6)) +
+  facet_wrap(. ~ Condition, scales="free") +
+  scale_fill_manual(values = terrain.colors(15)) 
+# you can also use rainbow(15) or heat.colors(15) or topo.colors(15) or terrain.colors(15)  
+```
+
+- you can also other color systems from package, e.g, defined color palette by the scientific journals when the number of colors you need less than 10 (category)
+- for example use scale_fill_npg() or  scale_fill_aaas() or scale_fill_lancet() or [more](https://cran.r-project.org/web/packages/ggsci/vignettes/ggsci.html) in ggsci package
+
+
+```{r}
+#length(unique(pd$Phylum))
+#6
+p = ggplot(data = pd, aes(x = Condition, y = Abundance)) + 
+  geom_bar(stat = 'identity', position = "fill", aes(fill = Phylum),width = 0.8) + 
+  theme_classic() +
+  scale_fill_simpsons()
+
+p1 = ggplot(data = pd, aes(x = Condition, y = Abundance)) + 
+  geom_bar(stat = 'identity', position = "fill", aes(fill = Phylum),width = 0.8) + 
+  theme_classic() +
+  scale_fill_uchicago()
+
+ggarrange(p,p1, nrow = 2)
+```
+
+#### [exercise]: 
+
+Create a side-by-side barplot showing the relative abundance of bacterial at Kingdom level and modify the color, which are commonly used in the paper published in Lancet journals.
+
+```{r}
+# add your code below:
+
+```
+
+#### 4.6 Adding statistical results on a graph
+
+
+
+- use stat_compare_means() in ggpubr package for statistical analysis
+
+```{r}
+p1 = ggplot(data = Adiv_meta, aes(x = Condition, y = Shannon)) + 
+  geom_boxplot(aes(fill = Condition)) +
+  geom_jitter() +
+  theme_classic()+
+  scale_fill_jco() +
+  stat_compare_means(method = "wilcox.test") +
+  scale_y_continuous(expand = c(0.01, 0.2))
+
+
+p2 = ggplot(data = Adiv_meta, aes(x = Condition, y = Shannon)) + 
+  geom_violin(aes(fill = Condition)) +
+  theme_classic()+
+  scale_fill_jco() +
+  stat_compare_means(method = "wilcox.test") +
+  scale_y_continuous(expand = c(0.01, 0.2))
+
+p3 = ggplot(data = Adiv_meta, aes(x = Condition, y = Chao1)) + 
+  geom_boxplot(aes(fill = Condition)) +
+  theme_classic()+
+  scale_fill_uchicago() +
+  stat_compare_means(method = "wilcox.test",aes(label = ..p.signif..)) + 
+  scale_y_continuous(expand = c(0.01, 20))
+
+
+p4 = ggplot(data = Adiv_meta, aes(x = Condition, y = Chao1)) + 
+  geom_violin(aes(fill = Condition)) +
+  theme_bw()+
+  facet_grid(.~ Gender) +
+  scale_fill_uchicago() +
+  stat_compare_means(method = "wilcox.test",aes(label = ..p.signif..)) +
+  scale_y_continuous(expand = c(0.01, 20))
+
+
+ggarrange(p1, p2,p3,p4, labels = c("p1","p2","p3","p4"), nrow = 2, ncol = 2)
+```
+
+- Student T-test or wilcox.test?
+
+#### [exercise]: 
+
+How to evaluate the difference of Shannon/Chao1 between Gender in each condition, significant or not?
+```{r}
+# add your code below:
+
+```
+
+
+#### 4.7 Correlation
+
+- how to perform the correlation analysis using R?
+```{r}
+cor.test(Adiv_meta$BMI, Adiv_meta$Age, method = 'spearman')
+```
+- are BMI and Shannon index significantly correlated?
+
+```{r}
+# add your code below:
+cor.test(Adiv_meta$BMI, Adiv_meta$Shannon, method = 'spearman')
+```
+
+```{r}
+p1 = ggplot(data = Adiv_meta, aes(x = BMI, y = Age)) +
+  geom_point(shape = 21, fill = '#0f993d', color = 'white', size = 3) +
+  sm_corr_theme() + 
+  sm_statCorr(corr_method = "spearman")
+
+p2 = ggplot(data = Adiv_meta, aes(x = BMI, y = Shannon)) +
+  geom_point(shape = 21, fill = 'purple', color = 'white', size = 3) +
+  sm_corr_theme() + 
+  sm_statCorr(corr_method = "spearman")
+
+ggarrange(p1, p2, labels = c("p1","p2"))
+```
+
+
+#### [excerise]:
+
+how about the correlation between Age and Shannon index
+
+```{r}
+# Add your code below:
+```
+
+#### 4.8 Heatmap showing the most abundant OTUs across samples
+- use geom_tile() in ggplot2
+
+```{r}
+pd_abundant = pd_abundant %>% mutate(Kingdom = str_replace(Kingdom, 'k__',''),
+                   Phylum = str_replace(Phylum, 'p__',''),
+                   Class = str_replace(Class, 'c__',''),
+                   Order = str_replace(Order, 'o__',''),
+                   Family = str_replace(Family, 'f__',''),
+                   Genus = str_replace(Genus, 'g__',''),
+                   Species = str_replace(Species, 's__',''))
+
+ggplot(data = pd_abundant, aes(x=SampleID, y=Species, fill = log10(Abundance+1))) +
+  geom_tile() +
+  theme_classic() +
+  facet_grid(.~ Condition, scales = 'free') +
+  scale_fill_gradient2(midpoint = 0.8, mid = 'white',low = '#131D5C', high = '#CE3633') + 
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank()) +
+  rremove('x.ticks')
+```
+
+- it is more flexible using ggplot.
+
+#### 4.9 Saving the graph in a file
+- save your graph as a image, or as a pdf file using ggsave() functions
+```{r}
+# plotting and saving as a object in R (e.g, fig_a)
+fig_a = ggplot(Adiv_meta, aes(x = Condition, y = BMI)) + 
+  geom_boxplot(aes(fill = Condition)) +
+  geom_jitter() +
+  theme_bw() +
+  ggtitle('BMI in different condition')
+
+# at least 4 arguments should be given to ggsave() function
+# first, a object that represents the graph you generate, (e.g., fig_a in the case)
+# second, file name and the folder you will save the file
+# third and forth are about width and height of graph, respectively
+ggsave(fig_a, filename = 'Figures/00.BMI.condition.pdf', width = 4, height = 3)
+# you can save the graph in other version
+# ggsave() support : "eps", "ps", "tex" (pictex), "pdf", "jpeg", "tiff", "png", "bmp", "svg" 
+```
+
+#### 4.10 Organize multiple graphs into one and save
+```{r}
+fig_b = ggplot(data = pd_abundant, aes(x=SampleID, y=Species, fill = log10(Abundance+1))) +
+  geom_tile() +
+  theme_classic() +
+  facet_grid(.~ Condition, scales = 'free') +
+  scale_fill_gradient2(midpoint = 0.8, mid = 'white',low = '#131D5C', high = '#CE3633') + 
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(), 
+        legend.position = 'bottom') +
+  rremove('x.ticks') +
+  ggtitle('Abundant species across samples')
+
+combined_fig = ggarrange(fig_a, fig_b, labels = c("A","B"))
+ggsave(combined_fig, filename = 'Figures/00.combined_fig.pdf', width = 10, height = 5)
+
+```
+
+
+
+-End, thank you!!
+
+
+
