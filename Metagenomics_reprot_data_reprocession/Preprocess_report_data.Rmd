@@ -1,0 +1,95 @@
+---
+title: "Preprocess_report_data"
+output: html_document
+date: "2022-11-07"
+---
+
+### Section 1. Set the working directory
+
+In the R cloud directory section:
+
+1.  Go to 'KCL_task' directory
+2.  Click 'More' icon and select "Set As Working Directory"
+
+### Section 2. Generate the merged read or relative abundance matrix
+
+```{r, message=FALSE}
+files<-list.files()
+index<-grep("_profile_count.txt",files)
+files<-as.matrix(files[index])
+
+uni_info<-NULL
+for (i in 1:length(files)){
+  data_each<-as.matrix(read.csv(files[i],header=T,skip=4,sep="\t")) #all are character
+  info_each<-data_each[,c("X.clade_name"  ,"clade_taxid")]
+  uni_info<-rbind(uni_info,info_each)
+}
+uni_info<-as.matrix(unique(uni_info))
+
+result<-NULL
+for (j in 1:length(files)){
+  data_each<-as.matrix(read.csv(files[j],header=T,skip=4,sep="\t")) #all are character
+  loc<-match(uni_info[,"X.clade_name"],data_each[,"X.clade_name"])
+  value_each<-as.matrix(data_each[loc,"estimated_number_of_reads_from_the_clade"])
+  #value_each<-as.matrix(data_each[loc,"relative_abundance"])
+  colnames(value_each)<-gsub("_profile_count.txt","",files[j])
+  result<-cbind(result,value_each)
+}
+
+result<-cbind(uni_info,result)
+write.table(result,file="merged_estimated_read_2022.txt",sep="\t",row.names=F,col.names=T,quote=F)
+#write.table(result,file="merged_estimated_relative_abundance_2022.txt",sep="\t",row.names=F,col.names=T,quote=F)
+```
+
+### Section 3. Remove current variables in the environment
+
+```{r}
+rm(list=ls())
+```
+
+### Section 4. Generate plyloseq object based on the read matrix or relative abundance matrix
+
+```{r, message=FALSE}
+main=read.table('merged_estimated_read_2022.txt',header=TRUE,sep="\t")
+#main=read.table('merged_estimated_relative_abundance_2022.txt',header=TRUE,sep="\t")
+
+t = separate(main,X.clade_name, into = c("Kingdom","Phylum", "Class", "Order", "Family", "Genus", "Species"), sep="\\|")
+t=t[!is.na(t$Species), ]
+t=t[!duplicated(t$Species),]
+
+x=1:dim(t)[1]
+OTUs= paste("OTU",x)
+t=add_column(t, OTUs = OTUs, .before = "clade_taxid")
+
+OTU =as.data.frame(t[,-which(names(t) %in% c("Kingdom","Phylum", "Class", "Order", "Family", "Genus","Type","clade_taxid"))])
+row.names(OTU) = OTU$OTUs
+OTU =as.data.frame(OTU[,-which(names(OTU) %in% c("OTUs","Species"))])
+OTU[is.na(OTU)] = 0
+#names(OTU) = gsub(pattern = "_profile", replacement = "", x = names(OTU))
+CountMatrix = OTU %>% as.matrix()
+mode(CountMatrix) <- 'integer'
+
+TAX =as.data.frame(t[,which(names(t) %in% c("Kingdom","Phylum", "Class", "Order", "Family", "Genus","Species","OTUs"))])
+row.names(TAX) = TAX$OTUs
+TAX =as.data.frame(TAX[,-which(names(TAX) %in% c("OTUs"))])
+TaxaMatrix <- TAX %>% as.matrix()
+
+Metadata <- read_xlsx("metadata_KCLtask.xlsx", sheet=1) %>% as.data.frame()
+rownames(Metadata) <- Metadata$SampleID
+Metadata<-Metadata[colnames(CountMatrix),]
+
+otuTABLE <- otu_table(CountMatrix, taxa_are_rows = TRUE)
+taxTABLE <- tax_table(TaxaMatrix)
+sampleDATA <- sample_data(Metadata)
+
+phylo_obj <- phyloseq(otuTABLE, taxTABLE, sampleDATA)
+
+#extract abundance profiles 
+OTUdata <- abundances(phylo_obj)
+#extract meta data
+SampleData <- meta(phylo_obj)
+#extract taxonomy of microbiome
+TAXAData <- as.data.frame(tax_table(phylo_obj)@.Data)
+save(file = "phyloseq_object_read_2022.Rdata",phylo_obj,OTUdata,SampleData,TAXAData)
+#save(file = "phyloseq_object_relative_abundance_2022.Rdata",phylo_obj,OTUdata,SampleData,TAXAData)
+```
