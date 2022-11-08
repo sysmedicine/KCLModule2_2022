@@ -1,0 +1,11 @@
+"0","gg.tpm.pre_1000 = data.frame(Axis1 = tSNE.tpm.pre_1000[,1],"
+"0","                            Axis2 = tSNE.tpm.pre_1000[,2],"
+"0","                            mat.design[c(""Treatment"", ""Time"")])"
+"0","ggplot(gg.tpm.pre_1000, aes(x = Axis1, y = Axis2, color = Treatment, shape = Time)) + "
+"0","  geom_point(aes(size = 6)) + "
+"0","  # stat_ellipse(linetype=1,level=0.95) +"
+"0","  guides(size = F) +"
+"0","  theme_bw()"
+"2","Warning:"
+"2"," `guides(<scale> = FALSE)` is deprecated. Please use `guides(<scale> = ""none"")` instead.
+"

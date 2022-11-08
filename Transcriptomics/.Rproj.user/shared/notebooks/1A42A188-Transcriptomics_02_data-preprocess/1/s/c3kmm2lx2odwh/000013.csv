@@ -1,0 +1,2 @@
+"0","tSNE.tpm.pre_1000 = Rtsne( t(mat.tpm.pre_1000), perplexity = 2)"
+"0","tSNE.tpm.pre_1000 = tSNE.tpm.pre_1000$Y"

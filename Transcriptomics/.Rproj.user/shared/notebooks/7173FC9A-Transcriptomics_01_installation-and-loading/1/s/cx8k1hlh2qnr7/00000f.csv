@@ -1,0 +1,6 @@
+"0","# to check there is any packages left for install"
+"0","pkgs_installed.4 = rownames(installed.packages())"
+"0","pkgs_needed.4 <- setdiff(pkgs_needed, pkgs_installed.4)"
+"0","pkgs_needed.4"
+"1","character(0)
+"

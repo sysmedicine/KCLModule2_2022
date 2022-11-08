@@ -1,0 +1,26 @@
+{
+    "id": "B5281F9E",
+    "path": "~/Documents/Teaching/courses/KCL-7NNNMHD-Module2_2022-2023/Transcriptomics/02_data-preprocess.R",
+    "project_path": "02_data-preprocess.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1667865194162.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "54,0",
+        "scrollLine": "44"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1667870206,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1667870206842,
+    "read_only": false,
+    "read_only_alternatives": []
+}

@@ -1,0 +1,83 @@
+---
+title: "Transcriptomics_02_data-preprocess"
+author: "Abdulahad Bayraktar"
+date: '2022-11-07'
+output: html_document
+---
+Understanding data and sample meta data (information of samples such demographics) are important priori steps before performing transcriptomics analysis. 
+
+A transcript-to-gene mapping is needed to convert transcript abundances, which were quantified from sample FASTQs, to gene counts. We also limit this to protein coding genes to 
+```{r}
+message("Querying Biomart for protein coding genes")
+ensembl=useMart("ensembl")
+ensembl = useDataset("mmusculus_gene_ensembl",mart=ensembl)
+proteinCodingGenes = getBM(attributes=c("ensembl_transcript_id", "ensembl_gene_id","external_gene_name","description"),
+                           filters='biotype', values=c('protein_coding'), mart=ensembl)
+save(proteinCodingGenes,file="proteinCodingGenes.Rda")
+head(proteinCodingGenes)
+```
+
+Naming abundance files according to sample names. This is needed to produce count and TPM matrices in R coming with kallisto outputs
+```{r}
+sra_accession = rev(dir("abundances/"))
+files = sort(file.path("abundances", sra_accession, "abundance.h5"))
+names(files) = c("sham_1dMI_1", "sham_1dMI_2",
+                 "MI_1dMI_1", "MI_1dMI_2", 
+                 "sham_3dMI_1", "sham_3dMI_2",
+                 "MI_3dMI_1", "MI_3dMI_2")
+```
+
+Conversion of kalllisto transcripts to counts
+```{r}
+txi.kallisto <- tximport(files, type = "kallisto", txOut = F, tx2gene = proteinCodingGenes, ignoreTxVersion = T)
+```
+
+Creating count matrix representing gene counts for samples and TPM matrix corresponding to same genes
+```{r}
+# count matrix
+mat.count <- txi.kallisto$counts
+# TPM matrix
+mat.tpm <- txi.kallisto$abundance
+```
+
+```{r}
+# design matrix
+mat.design <- data.frame(SRA_accession = sra_accession,
+                         Sample_name = colnames(mat.count),
+                         Treatment = sapply(strsplit(colnames(mat.count), split = "_"), function(x) x[1]),
+                         Time = sapply(strsplit(colnames(mat.count), split = "_"), function(x) x[2])
+                         )
+```
+
+Batch effects refer to effect of sample factors other the factor/variable of our interest that may change the variance dramatically. These batch factors are mostly a part of experimental design, technical replicants and do not carry a biological importance (e.g. batch number, flow cell, sampling location), but may cause variation. In research, they are required to be eliminated in almost all cases.
+
+Biological (e.g. drug dose, treatment duration) and demographic factors (e.g. age, sex, ethnicity) may be important for research purposes, so new analyses can be performed to determine their effects. Still, we would like to treat them as batch effects in transcriptomics analysis.
+
+Lets' choose the mostly variant genes to determine such factors. TPMs are better than counts for representing variance distribution
+```{r}
+# select 10000 highly variant genes
+high.var.genes = sort( apply(mat.tpm, 1, sd), decreasing = T )[1:1000]
+mat.tpm.pre_1000 = mat.tpm[which(rownames(mat.tpm) %in% names(high.var.genes)),]
+head(mat.tpm.pre_1000)
+```
+
+t-SNE (t-distribute stochastic neighbor embedding) is an effective statistical method for visualizing high-dimensional data
+```{r}
+tSNE.tpm.pre_1000 = Rtsne( t(mat.tpm.pre_1000), perplexity = 2)
+tSNE.tpm.pre_1000 = tSNE.tpm.pre_1000$Y
+```
+
+Let's visualize
+```{r}
+gg.tpm.pre_1000 = data.frame(Axis1 = tSNE.tpm.pre_1000[,1],
+                            Axis2 = tSNE.tpm.pre_1000[,2],
+                            mat.design[c("Treatment", "Time")])
+ggplot(gg.tpm.pre_1000, aes(x = Axis1, y = Axis2, color = Treatment, shape = Time)) + 
+  geom_point(aes(size = 6)) + 
+  # stat_ellipse(linetype=1,level=0.95) +
+  guides(size = F) +
+  theme_bw()
+```
+
+
+

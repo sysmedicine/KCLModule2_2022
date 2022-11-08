@@ -1,0 +1,69 @@
+---
+title: "Transcriptomics_01_installation-and-loading"
+author: "Abdulahad Bayraktar"
+date: '2022-11-07'
+output: html_document
+---
+This tutorial is to prepare the suitable environment for performing basic transcriptomics analysis. Transcriptome data is a rich source to depict gene expressions of a single organism, sampled from single cells, tissues or organs. 
+
+Main objective of transcriptome data based gene expression and further analysis is determining comparable transcriptional differences between donors dependent on a factor, e.g. disease, gender or age, while keeping effect of other factors at minimum. These transcriptional changes help us to understand ____
+
+
+```{r}
+# Packages for Installation
+pkgs_needed = c("devtools", "BiocManager")
+# Packages for Data Access
+pkgs_needed = c(pkgs_needed, "readxl", "xlsx", "readr", "biomaRt")
+# Packages for Feature Extraction Plots
+pkgs_needed = c(pkgs_needed, "umap", "Rtsne")
+# Packages for Visually Appealing ggplot
+pkgs_needed = c(pkgs_needed, "ggplot2", "ggplotify")
+# Packages for Alternative Graphics
+pkgs_needed = c(pkgs_needed, "pheatmap", "RColorBrewer")
+# Packages for Data Manipulation
+pkgs_needed = c(pkgs_needed, "data.table", "dplyr", "tibble")
+# Packages for Differential Expression Analysis
+pkgs_needed = c(pkgs_needed, "tximport", "DESeq2")
+# Packages for Gene Set Enrichment
+pkgs_needed = c(pkgs_needed, "fgsea", "AnnotationDbi", "org.Mm.eg.db", "EnrichmentBrowser")
+```
+
+Let's what we are dealing now
+```{r}
+message('Packages installed already')
+head(pkgs_installed)
+message('Packages we want to install/load for this session')
+head(pkgs_needed)
+```
+
+
+Let's load installed packages necessary for the session. "character.only = T" to pass variable into library function
+```{r message=FALSE}
+pkgs_installed = rownames(installed.packages())
+for(pkgs in intersect(pkgs_needed, pkgs_installed)){library(pkgs, character.only = T)}
+```
+
+
+Let's check not installed packages and install them
+```{r, message=FALSE, warning=FALSE}
+pkgs_installed.2 = rownames(installed.packages())
+pkgs_needed.2 <- setdiff(pkgs_needed, pkgs_installed.2)
+pkgs_needed.2
+for(pkgs in pkgs_needed.2){install.packages(pkgs)}
+```
+
+Let's repeat this for packages installed by BiocManager
+```{r, message=FALSE, warning=FALSE}
+pkgs_installed.3 = rownames(installed.packages())
+pkgs_needed.3 <- setdiff(pkgs_needed, pkgs_installed.3)
+pkgs_needed.3
+for(pkgs in pkgs_needed.3){BiocManager::install(pkgs)}
+```
+
+Let's check if there is any packages left for installation
+```{r}
+pkgs_installed.4 = rownames(installed.packages())
+pkgs_needed.4 <- setdiff(pkgs_needed, pkgs_installed.4)
+pkgs_needed.4
+```
+

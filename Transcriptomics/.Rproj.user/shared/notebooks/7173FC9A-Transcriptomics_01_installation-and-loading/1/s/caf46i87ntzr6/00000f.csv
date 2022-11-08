@@ -1,0 +1,7 @@
+"0","# Repeat this for packages installed by BiocManager"
+"0","pkgs_installed.3 = rownames(installed.packages())"
+"0","pkgs_needed.3 <- setdiff(pkgs_needed, pkgs_installed.3)"
+"0","pkgs_needed.3"
+"1","character(0)
+"
+"0","for(pkgs in pkgs_needed.3){BiocManager::install(pkgs)}"

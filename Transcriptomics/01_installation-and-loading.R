@@ -1,0 +1,42 @@
+# @ Packages ----
+# Packages for Installation
+pkgs_needed = c("devtools", "BiocManager")
+# Packages for Data Access
+pkgs_needed = c(pkgs_needed, "readxl", "xlsx", "readr", "biomaRt")
+# Packages for Feature Extraction Plots
+pkgs_needed = c(pkgs_needed, "umap", "Rtsne")
+# Packages for Visually Appealing ggplot
+pkgs_needed = c(pkgs_needed, "ggplot2", "ggplotify")
+# Packages for Alternative Graphics
+pkgs_needed = c(pkgs_needed, "Cairo",  # image production on cluster
+                "pheatmap", "RColorBrewer")
+# Packages for Data Manipulation
+pkgs_needed = c(pkgs_needed, "data.table", "dplyr", "tibble")
+# Packages for Differential Expression Analysis
+pkgs_needed = c(pkgs_needed, "tximport", "DESeq2")
+# Packages for Gene Set Enrichment
+pkgs_needed = c(pkgs_needed, "fgsea", "AnnotationDbi", "org.Mm.eg.db", "EnrichmentBrowser")
+
+
+# @ Load Packages ----
+# Load installed packages. "character.only = T" to pass variable into library function
+pkgs_installed = rownames(installed.packages())
+for(pkgs in intersect(pkgs_needed, pkgs_installed)){library(pkgs, character.only = T)}
+
+# To check not installed packages
+pkgs_installed.2 = rownames(installed.packages())
+pkgs_needed.2 <- setdiff(pkgs_needed, pkgs_installed.2)
+pkgs_needed.2
+# To install them
+for(pkgs in pkgs_needed.2){install.packages(pkgs)}
+
+
+# Repeat this for packages installed by BiocManager
+pkgs_installed.3 = rownames(installed.packages())
+pkgs_needed.3 <- setdiff(pkgs_needed, pkgs_installed.3)
+for(pkgs in pkgs_needed.3){BiocManager::install(pkgs, force = T)}
+
+# to check there is any packages left for install
+pkgs_installed.4 = rownames(installed.packages())
+pkgs_needed.4 <- setdiff(pkgs_needed, pkgs_installed.4)
+pkgs_needed.4

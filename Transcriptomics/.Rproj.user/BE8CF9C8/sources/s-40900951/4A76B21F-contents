@@ -1,0 +1,21 @@
+---
+title: "Transcriptomics_03_DEA"
+author: "Abdulahad Bayraktar"
+date: '2022-11-08'
+output: html_document
+---
+
+Differential gene expression (DGE) analysis 
+
+```{r}
+# convert to DESeqDataSet format
+dset <- DESeqDataSetFromMatrix(countData = round(mat.count),
+                               colData   = mat.design, 
+                               design    = ~ Treatment + Time)
+# @ DESeq2
+ds2 <- DESeq(dset, fitType = "parametric", parallel = T)
+# dispersion plot (whether the model fits)
+plotDispEsts(ds2)
+
+```
+
